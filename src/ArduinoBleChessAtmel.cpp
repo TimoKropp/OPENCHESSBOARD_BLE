@@ -9,12 +9,7 @@ namespace
 #define SERVICE_UUID           "f5351050-b2c9-11ec-a0c0-b3bc53b08d33"
 #define CHARACTERISTIC_UUID_RX "f53513ca-b2c9-11ec-a0c1-639b8957db99"
 #define CHARACTERISTIC_UUID_TX "f535147e-b2c9-11ec-a0c2-8bbd706ec4e6"
-
-//ChessLink
-//#define SERVICE_UUID           "49535343-fe7d-4ae5-8fa9-9fafd205e455"
-//#define CHARACTERISTIC_UUID_RX "49535343-1e4d-4bd9-ba61-23c647249616"
-//#define CHARACTERISTIC_UUID_TX "49535343-8841-43f4-a8d4-ecbe34729bb3"
-
+    
 // https://chess.stackexchange.com/questions/30004/longest-possible-fen
 #define MAX_STR_SIZE 100
 
