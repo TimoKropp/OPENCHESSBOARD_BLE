@@ -1,7 +1,7 @@
 # OPENCHESSBOARD_BLE
 Firmware for the OPENCHESSBOARD to connect via BLE to Lichess App.
 
-Many Thanks to vovagorodok and  [dkwach]([https://www.google.com)](https://github.com/dkwach) for providing the PR for supporting BLE devoces to play on Lichess App, as well as providing the base implementation and great examples for supporting external devices via CECP protocol. Without this baseline, the BLE support for the openchessboard would not be possible.
+Many Thanks to vovagorodok and  [dkwach](https://github.com/dkwach) for providing the PR for supporting BLE devoces to play on Lichess App, as well as providing the base implementation and great examples for supporting external devices via CECP protocol. Without this baseline, the BLE support for the openchessboard would not be possible.
 
 Examples for CECP implementation:
 https://github.com/vovagorodok/ArduinoBleChess
