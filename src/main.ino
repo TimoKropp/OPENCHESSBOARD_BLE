@@ -83,7 +83,7 @@ public:
     DEBUG_SERIAL.println(mv.c_str());
   }
   
-  void checkDviceMove() {
+  void checkDeviceMove() {
     
       Ble::String move;
       move = getMoveInput();
@@ -128,6 +128,6 @@ void loop() {
       BLE.poll();
 
     #endif
-      device.checkDviceMove();
+      device.checkDeviceMove();
   }
 }
