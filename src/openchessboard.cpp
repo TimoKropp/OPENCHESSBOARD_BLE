@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "openchessboard.h"
-#include "ArduinoBleChess.h"
+#include <ArduinoBleChess.h>
 
 /* BOARD SETUP/CONFIGURATION */
 #define LED_BRIGHTNESS 100 // LED brightess in percent
@@ -310,8 +310,8 @@ void displayMove(String mv) {
   ledBoardState[row1] |= 1UL << col1;
   ledBoardState[row2] |= 1UL << col2;
 #else
-  ledBoardState[col1] |= 1UL << 7-row1;
-  ledBoardState[col2] |= 1UL << 7-row2;
+  ledBoardState[col1] |= 1UL << (7-row1);
+  ledBoardState[col2] |= 1UL << (7-row2);
 #endif
   digitalWrite(LED_OE_N_PIN , 1);
   digitalWrite(LED_MR_N_PIN, 0);
