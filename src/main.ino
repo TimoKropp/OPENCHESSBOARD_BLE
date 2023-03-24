@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "libs\ArduinoBleChess.h"
-#include "libs\openchessboard.h"
+#include <ArduinoBleChess.h>
+#include "openchessboard.h"
 
 #define DEBUG false  //set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
@@ -30,10 +30,10 @@ bool checkCastling(String move_input) {
   }  
 }
 
-class MyBleChessDevice : public BleChessDevice
+class MyBleChessDevice : public BleChessPeripheral
 {
 public:
-  void onNewGame(const Ble::String& fen) {
+  void onNewRound(const String& fen) override {
     clearDisplay();
     displayWtoPlay();
     
@@ -41,11 +41,11 @@ public:
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
   }
-  void askDeviceMakeMove() {
+  void askPeripheralMakeMove() override {
     DEBUG_SERIAL.println("please move: ");
   }
 
-  void askDeviceStopMove() {
+  void askPeripheralStopMove() override {
     clearDisplay();
     game_running = false;
     skip_next_send = false;
@@ -54,7 +54,7 @@ public:
     DEBUG_SERIAL.println("stop move: ");
   }
 
-  void onMove(const Ble::String& mv) {
+  void onCentralMove(const String& mv) override {
     clearDisplay();
     if (game_running){
       DEBUG_SERIAL.print("moved from phone: ");
@@ -64,7 +64,7 @@ public:
     }
   }
 
-  void onDeviceMoveRejected(const Ble::String& mv) {
+  void onPeripheralMoveRejected(const String& mv) override {
     if (game_running){
       DEBUG_SERIAL.print("move rejected: ");
       DEBUG_SERIAL.println(mv.c_str());
@@ -78,14 +78,14 @@ public:
     }
   }
 
-  void onDeviceMovePromoted(const Ble::String& mv) {
+  void onPeripheralMovePromoted(const String& mv) override {
     DEBUG_SERIAL.print("promoted on phone screen: ");
     DEBUG_SERIAL.println(mv.c_str());
   }
   
-  void checkDeviceMove() {
+  void checkPeripheralMove() {
     
-      Ble::String move;
+      String move;
       move = getMoveInput();
 
       if(checkCastling(move)){
@@ -97,7 +97,7 @@ public:
       
       clearDisplay();
       if (!skip_next_send){
-        deviceMove(move);
+        peripheralMove(move);
       }
       skip_next_send = false; /*skip only once, then allow new move send */
   }
@@ -122,12 +122,6 @@ void setup() {
 
 
 void loop() {
-
-  while (true){
-    #if defined(BLE_PULL_REQUIRED)
-      BLE.poll();
-
-    #endif
-      device.checkDeviceMove();
-  }
+  BLE.poll();
+  device.checkPeripheralMove();
 }
