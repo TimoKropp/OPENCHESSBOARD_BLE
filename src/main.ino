@@ -2,7 +2,7 @@
 #include <ArduinoBleChess.h>
 #include "openchessboard.h"
 
-#define DEBUG false  //set to true for debug output, false for no debug output
+#define DEBUG true  //set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
 bool skip_next_send = false;
@@ -84,7 +84,7 @@ public:
   }
   
   void checkPeripheralMove() {
-    
+
       String move;
       move = getMoveInput();
 
@@ -113,7 +113,7 @@ void setup() {
   while(!Serial);
 #endif
   DEBUG_SERIAL.println("BLE init: OPENCHESSBOARD");
-  if (!ArduinoBleChess.begin("OPENCHESSBOARD", device)){
+  if (!ArduinoBleChess.begin("Chess board", device)){
     DEBUG_SERIAL.println("BLE initialization error");
   }
   DEBUG_SERIAL.println("start BLE polling...");
