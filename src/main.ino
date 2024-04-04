@@ -39,54 +39,79 @@ bool checkCastling(String move_input) {
 class Peripheral : public BleChessPeripheral
 {
 public:
-  void onNewRound(const String& fen) override {
+  void onFeature(const String& feature) override {
+    const bool isSuppported =
+      feature == "msg" ||
+      feature == "last_move";
+    sendAck(isSuppported);
+  }
+
+  void onFen(const String& fen) override {
     clearDisplay();
     displayWtoPlay();
     
     game_running = true;
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
-  }
-  void askPeripheralMakeMove() override {
-    DEBUG_SERIAL.println("please move: ");
+
+    sendAck(true);
   }
 
-  void askPeripheralStopMove() override {
+  void onMove(const String& mv) override {
+    clearDisplay();
+    if (game_running){
+      DEBUG_SERIAL.print("moved from central: ");
+      DEBUG_SERIAL.println(mv.c_str());
+      displayMove(mv.c_str());
+      skip_next_send = true;
+    }
+
+    sendAck(true);
+  }
+
+  void onMoveAck(bool ack) override {
+    if (ack){
+      onMoveAccepted();
+    }
+    else{
+      onMoveRejected();
+    }
+  }
+
+  void onPromote(const String& mv) override {
+    DEBUG_SERIAL.print("promoted on central screen: ");
+    DEBUG_SERIAL.println(mv.c_str());
+
+    sendAck(true);
+  }
+
+  void onLastMove(const String& mv) override {
+    DEBUG_SERIAL.print("last move: ");
+    DEBUG_SERIAL.println(mv.c_str());
+
+    sendAck(true);
+  }
+
+  void onMoveAccepted(){
     clearDisplay();
     game_running = false;
     skip_next_send = false;
     my_castling_rights = true;
     opp_castling_rights = true;
-    DEBUG_SERIAL.println("stop move: ");
   }
 
-  void onCentralMove(const String& mv) override {
-    clearDisplay();
-    if (game_running){
-      DEBUG_SERIAL.print("moved from phone: ");
-      DEBUG_SERIAL.println(mv.c_str());
-      displayMove(mv.c_str());
-      skip_next_send = true;
-    }
-  }
-
-  void onPeripheralMoveRejected(const String& mv) override {
+  void onMoveRejected() {
     if (game_running){
       DEBUG_SERIAL.print("move rejected: ");
-      DEBUG_SERIAL.println(mv.c_str());
+      DEBUG_SERIAL.println(lastPeripheralMove.c_str());
       for (int k = 0; k < 3; k++){
         clearDisplay();
         delay(200);
-        displayMove(mv.c_str());
+        displayMove(lastPeripheralMove.c_str());
         delay(200); 
       }
       skip_next_send = true; /* give one try to reverse move, before sending next move to central */
     }
-  }
-
-  void onPeripheralMovePromoted(const String& mv) override {
-    DEBUG_SERIAL.print("promoted on phone screen: ");
-    DEBUG_SERIAL.println(mv.c_str());
   }
   
   void checkPeripheralMove() {
@@ -98,15 +123,19 @@ public:
         getMoveInput(); /*get second move from castling but do not send it: send king move only after second input */
       }
 
-      DEBUG_SERIAL.print("moved from board: ");
+      DEBUG_SERIAL.print("moved from peripheral: ");
       DEBUG_SERIAL.println(move.c_str());
       
       clearDisplay();
       if (!skip_next_send){
-        peripheralMove(move);
+        sendMove(move);
+        lastPeripheralMove = move;
       }
       skip_next_send = false; /*skip only once, then allow new move send */
   }
+
+private:
+  String lastPeripheralMove;
 };
 Peripheral peripheral{};
 
