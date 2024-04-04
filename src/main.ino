@@ -1,7 +1,12 @@
 #include <Arduino.h>
+#include <ArduinoBleOTA.h>
 #include <ArduinoBleChess.h>
+#include <BleChessUuids.h>
+#include <BleOtaUuids.h>
+#include <BleChessMultiservice.h>
 #include "openchessboard.h"
 
+#define DEVICE_NAME "OCHESSBOARD" // max name size with 128 bit uuid is 11
 #define DEBUG true  //set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
@@ -27,10 +32,11 @@ bool checkCastling(String move_input) {
       DEBUG_SERIAL.print("opponent castle move...");
       return true;
     }
-  }  
+  }
+  return false;
 }
 
-class MyBleChessDevice : public BleChessPeripheral
+class Peripheral : public BleChessPeripheral
 {
 public:
   void onNewRound(const String& fen) override {
@@ -102,7 +108,7 @@ public:
       skip_next_send = false; /*skip only once, then allow new move send */
   }
 };
-MyBleChessDevice device{};
+Peripheral peripheral{};
 
 
 void setup() {
@@ -113,9 +119,14 @@ void setup() {
   while(!Serial);
 #endif
   DEBUG_SERIAL.println("BLE init: OPENCHESSBOARD");
-  if (!ArduinoBleChess.begin("Chess board", device)){
-    DEBUG_SERIAL.println("BLE initialization error");
+  initBle(DEVICE_NAME);
+  if (!ArduinoBleChess.begin("Chess board", peripheral)){
+    DEBUG_SERIAL.println("Ble chess initialization error");
   }
+  if (!ArduinoBleOTA.begin(InternalStorage)) {
+    DEBUG_SERIAL.println("Ble ota initialization error");
+  }
+  advertiseBle(DEVICE_NAME, BLE_CHESS_SERVICE_UUID, BLE_OTA_SERVICE_UUID);
   DEBUG_SERIAL.println("start BLE polling...");
 
 }
@@ -123,5 +134,6 @@ void setup() {
 
 void loop() {
   BLE.poll();
-  device.checkPeripheralMove();
+  ArduinoBleOTA.pull();
+  peripheral.checkPeripheralMove();
 }
