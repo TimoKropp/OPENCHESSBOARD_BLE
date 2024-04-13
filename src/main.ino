@@ -88,6 +88,7 @@ public:
   void onLastMove(const String& mv) override {
     DEBUG_SERIAL.print("last move: ");
     DEBUG_SERIAL.println(mv.c_str());
+    displayMove(mv.c_str());
 
     sendAck(true);
   }
@@ -97,7 +98,7 @@ public:
       DEBUG_SERIAL.print("move accepted: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
       clearDisplay();
-      // game_running = false;
+      displayMove(lastPeripheralMove.c_str());
       skip_next_send = false;
       // my_castling_rights = true;
       // opp_castling_rights = true;
