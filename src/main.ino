@@ -93,11 +93,15 @@ public:
   }
 
   void onMoveAccepted(){
-    clearDisplay();
-    game_running = false;
-    skip_next_send = false;
-    my_castling_rights = true;
-    opp_castling_rights = true;
+    if (game_running){
+      DEBUG_SERIAL.print("move accepted: ");
+      DEBUG_SERIAL.println(lastPeripheralMove.c_str());
+      clearDisplay();
+      // game_running = false;
+      skip_next_send = false;
+      // my_castling_rights = true;
+      // opp_castling_rights = true;
+    }
   }
 
   void onMoveRejected() {
