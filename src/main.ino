@@ -7,7 +7,7 @@
 #include "openchessboard.h"
 
 #define DEVICE_NAME "OCHESSBOARD" // max name size with 128 bit uuid is 11
-#define DEBUG true  //set to true for debug output, false for no debug output
+#define DEBUG true  // set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
 bool skip_next_send = false;
@@ -16,8 +16,8 @@ bool opp_castling_rights = true;
 
 bool game_running = false;
 
-bool checkCastling(String move_input) {
-  //check if last move was king move from castling
+bool checkCastling(BleChessString move_input) {
+  // check if last move was king move from castling
   if(((move_input == "e1g1") || (move_input == "e1c1") ||  (move_input == "e8g8") || (move_input == "e8c8")) ){
     
     if (my_castling_rights)
@@ -39,14 +39,14 @@ bool checkCastling(String move_input) {
 class Peripheral : public BleChessPeripheral
 {
 public:
-  void onFeature(const String& feature) override {
+  void onFeature(const BleChessString& feature) override {
     const bool isSuppported =
       feature == "msg" ||
       feature == "last_move";
     sendAck(isSuppported);
   }
 
-  void onFen(const String& fen) override {
+  void onFen(const BleChessString& fen) override {
     clearDisplay();
     displayWtoPlay();
     
@@ -57,7 +57,7 @@ public:
     sendAck(true);
   }
 
-  void onMove(const String& mv) override {
+  void onMove(const BleChessString& mv) override {
     clearDisplay();
     if (game_running){
       DEBUG_SERIAL.print("moved from central: ");
@@ -78,14 +78,14 @@ public:
     }
   }
 
-  void onPromote(const String& mv) override {
+  void onPromote(const BleChessString& mv) override {
     DEBUG_SERIAL.print("promoted on central screen: ");
     DEBUG_SERIAL.println(mv.c_str());
 
     sendAck(true);
   }
 
-  void onLastMove(const String& mv) override {
+  void onLastMove(const BleChessString& mv) override {
     DEBUG_SERIAL.print("last move: ");
     DEBUG_SERIAL.println(mv.c_str());
     displayMove(mv.c_str());
@@ -121,11 +121,10 @@ public:
   
   void checkPeripheralMove() {
 
-      String move;
-      move = getMoveInput();
+      BleChessString move = getMoveInput().c_str();
 
       if(checkCastling(move)){
-        getMoveInput(); /*get second move from castling but do not send it: send king move only after second input */
+        getMoveInput().c_str(); /* get second move from castling but do not send it: send king move only after second input */
       }
 
       DEBUG_SERIAL.print("moved from peripheral: ");
@@ -140,7 +139,7 @@ public:
   }
 
 private:
-  String lastPeripheralMove;
+  BleChessString lastPeripheralMove;
 };
 Peripheral peripheral{};
 
@@ -162,12 +161,12 @@ void setup() {
   }
   advertiseBle(DEVICE_NAME, BLE_CHESS_SERVICE_UUID, BLE_OTA_SERVICE_UUID);
   DEBUG_SERIAL.println("start BLE polling...");
-
 }
 
-
 void loop() {
+#ifndef USE_NIM_BLE_ARDUINO_LIB
   BLE.poll();
+#endif
   ArduinoBleOTA.pull();
   peripheral.checkPeripheralMove();
 }

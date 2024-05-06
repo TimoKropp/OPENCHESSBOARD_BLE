@@ -175,7 +175,9 @@ String getMoveInput(void) {
 
 // wait for Start move event
   while (!mvStarted) {
+#ifndef USE_NIM_BLE_ARDUINO_LIB
     BLE.poll();
+#endif
     readHall(hallBoardState1);
 
     for (int row_index = 0; row_index < 8; row_index++) {
