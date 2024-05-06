@@ -135,7 +135,7 @@ public:
         sendMove(move);
         lastPeripheralMove = move;
       }
-      skip_next_send = false; /*skip only once, then allow new move send */
+      skip_next_send = false; /* skip only once, then allow new move send */
   }
 
 private:
