@@ -124,7 +124,7 @@ public:
       BleChessString move = getMoveInput().c_str();
 
       if(checkCastling(move)){
-        getMoveInput().c_str(); /* get second move from castling but do not send it: send king move only after second input */
+        getMoveInput(); /* get second move from castling but do not send it: send king move only after second input */
       }
 
       DEBUG_SERIAL.print("moved from peripheral: ");
