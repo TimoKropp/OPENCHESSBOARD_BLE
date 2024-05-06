@@ -53,7 +53,7 @@ public:
     game_running = true;
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
-
+    
     sendAck(true);
   }
 

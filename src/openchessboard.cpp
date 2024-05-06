@@ -3,10 +3,7 @@
 #include <ArduinoBleChess.h>
 
 /* BOARD SETUP/CONFIGURATION */
-#define LED_BRIGHTNESS 100 // LED brightess in percent
 #define SENSE_THRS 200 // Reduce if pieces are not recognized, increase if Board starts blinking randomly
-
-#define LED_DIM_VAL (255 - LED_BRIGHTNESS/100 * 255)  
 
 bool connect_flipstate = true;
 
@@ -203,8 +200,8 @@ String getMoveInput(void) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(ledBoardState);
   digitalWrite(LED_LATCH_PIN, 1);
-  //digitalWrite(LED_OE_N_PIN , 0);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
+  digitalWrite(LED_OE_N_PIN , 0);
+
 
 // wait for end move event
   while (!mvFinished ) {
@@ -239,8 +236,7 @@ String getMoveInput(void) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(ledBoardState);
   digitalWrite(LED_LATCH_PIN, 1);
-  //digitalWrite(LED_OE_N_PIN , 0);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
+  digitalWrite(LED_OE_N_PIN , 0);
   delay(300);
   
   return mvInput;
@@ -265,8 +261,7 @@ void clearDisplay(void) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(ledBoardState);
   digitalWrite(LED_LATCH_PIN, 1);
-  //digitalWrite(LED_OE_N_PIN , 1);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
+  digitalWrite(LED_OE_N_PIN , 1);
 }
 
 
@@ -319,8 +314,8 @@ void displayMove(String mv) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(ledBoardState);
   digitalWrite(LED_LATCH_PIN, 1);
-  //digitalWrite(LED_OE_N_PIN , 0);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
+  digitalWrite(LED_OE_N_PIN , 0);
+
 }
 
 
@@ -341,8 +336,7 @@ void displayConnectWait(void) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(connect_led_array);
   digitalWrite(LED_LATCH_PIN, 1);
-  //digitalWrite(LED_OE_N_PIN , 0);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
+  digitalWrite(LED_OE_N_PIN , 0);
   connect_flipstate = !connect_flipstate;
   delay(300);
 }
@@ -367,8 +361,7 @@ void displayBtoPlay(void) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(led_array);
   digitalWrite(LED_LATCH_PIN, 1);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
-
+  digitalWrite(LED_OE_N_PIN , 0);
 }
 
 void displayWtoPlay(void) {
@@ -389,5 +382,5 @@ void displayWtoPlay(void) {
   digitalWrite(LED_LATCH_PIN, 0);
   shiftOut(led_array);
   digitalWrite(LED_LATCH_PIN, 1);
-  analogWrite(LED_OE_N_PIN , LED_DIM_VAL);
+  digitalWrite(LED_OE_N_PIN , 0);
 }
