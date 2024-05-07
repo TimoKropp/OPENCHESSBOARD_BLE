@@ -207,6 +207,9 @@ String getMoveInput(void) {
 
 // wait for end move event
   while (!mvFinished ) {
+#ifndef USE_NIM_BLE_ARDUINO_LIB
+    BLE.poll();
+#endif
     readHall(hallBoardState2);
     delay(100);
     readHall(hallBoardState3);
