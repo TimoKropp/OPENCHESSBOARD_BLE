@@ -6,7 +6,7 @@
 #include <BleChessMultiservice.h>
 #include "openchessboard.h"
 
-#define DEVICE_NAME "OCHESSBOARD" // max name size with 128 bit uuid is 11
+#define DEVICE_NAME "OPEN CHESS" // max name size with 128 bit uuid is 11
 #define DEBUG true  // set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
@@ -153,7 +153,7 @@ void setup() {
 #endif
   DEBUG_SERIAL.println("BLE init: OPENCHESSBOARD");
   initBle(DEVICE_NAME);
-  if (!ArduinoBleChess.begin("Chess board", peripheral)){
+  if (!ArduinoBleChess.begin(peripheral)){
     DEBUG_SERIAL.println("Ble chess initialization error");
   }
   if (!ArduinoBleOTA.begin(InternalStorage)) {
