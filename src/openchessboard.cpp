@@ -3,29 +3,49 @@
 #include <ArduinoBleChess.h>
 
 /* BOARD SETUP/CONFIGURATION */
-#define SENSE_THRS 200 // Reduce if pieces are not recognized, increase if Board starts blinking randomly
-
+#define SENSE_THRS 300 // Reduce if pieces are not recognized, increase if Board starts blinking randomly
+#define esp32
 bool connect_flipstate = true;
 
 //define if board orientation has power plug at top; if not defined board is oriented with plug at right side
-//#define PLUG_AT_TOP 
+#define PLUG_AT_TOP 
 
 /* HW GPIO configuration */
-#define LED_MR_N_PIN  4 // RESET, D4
-#define LED_CLOCK_PIN 6 //SHCP, D5
-#define LED_LATCH_PIN 5 //STCP, D6 
-#define LED_OE_N_PIN 3 // D3 
-#define LED_PIN 2 //D2
+#ifdef esp32
+int LED_DATA_PIN = D2; //D2, 5
+int LED_OE_N_PIN = D3; // D3, 6 
+int LED_MR_N_PIN = D4; //D4, 7
+int LED_LATCH_PIN = D5; // D5, 8
+int LED_CLOCK_PIN = D6; //D6, 9
 
-#define HALL_OUT_S0 10 //D10
-#define HALL_OUT_S1  9 //D9
-#define HALL_OUT_S2 8 //D8
+int HALL_OUT_S0 = D10;  //D10, 17
+int HALL_OUT_S1 = D9;  //D09, 18
+int HALL_OUT_S2 = D8;  //D08, 21 
 
-#define HALL_ROW_S0 A7  //A7/D21
-#define HALL_ROW_S1 A6  //A6/D20
-#define HALL_ROW_S2 A5  //A5/D19
+int HALL_ROW_S0 = A7; //D24, 14, A7
+int HALL_ROW_S1 = A6; //D23, 13, A6
+int HALL_ROW_S2 = A5; //D22, 12, A5
+int HALL_SENSE = A3;  //A3
 
-#define HALL_SENSE A3  //A3
+#endif
+
+#ifdef nano33iot
+int LED_MR_N_PIN = 4; // RESET, D4
+int LED_CLOCK_PIN = 6; //SHCP, D5
+int LED_LATCH_PIN = 5; //STCP, D6 
+int LED_OE_N_PIN = 3; // D3 
+int LED_DATA_PIN = 2; //D2
+
+int HALL_OUT_S0 = 10; //D10
+int HALL_OUT_S1 = 9; //D9
+int HALL_OUT_S2 = 8; //D8
+
+int HALL_ROW_S0 = A7;  //A7/D21
+int HALL_ROW_S1 = A6;  //A6/D20
+int HALL_ROW_S2 = A5;  //A5/D19
+
+int HALL_SENSE = A3;  //A3
+#endif
 
 /* ---------------------------------------
  *  Function to initiate GPIOs.
@@ -42,7 +62,7 @@ void initHW(void) {
   
   pinMode(LED_CLOCK_PIN, OUTPUT);
   pinMode(LED_LATCH_PIN, OUTPUT);
-  pinMode(LED_PIN, OUTPUT);
+  pinMode(LED_DATA_PIN, OUTPUT);
 
   pinMode(HALL_OUT_S0, OUTPUT);
   pinMode(HALL_OUT_S1, OUTPUT);
@@ -66,7 +86,7 @@ void shiftOut(byte ledBoardState[]) {
 
   bool pinStateEN;
 
-  digitalWrite(LED_PIN, 0);
+  digitalWrite(LED_DATA_PIN, 0);
   digitalWrite(LED_MR_N_PIN, 0);
   delay(1);
   digitalWrite(LED_MR_N_PIN, 1);
@@ -83,9 +103,9 @@ void shiftOut(byte ledBoardState[]) {
         pinStateEN = 0;
       }
       
-      digitalWrite(LED_PIN, pinStateEN);
+      digitalWrite(LED_DATA_PIN, pinStateEN);
       digitalWrite(LED_CLOCK_PIN, 1);
-      digitalWrite(LED_PIN, 0);
+      digitalWrite(LED_DATA_PIN, 0);
     }
   }
   digitalWrite(LED_CLOCK_PIN, 0);
@@ -124,9 +144,9 @@ void readHall(byte hallBoardState[]) {
         digitalWrite(HALL_OUT_S1, bit1);
         digitalWrite(HALL_OUT_S2, bit2);
 
-      //delayMicroseconds(10);
+      delayMicroseconds(300);
       hall_val = analogRead(HALL_SENSE);
-      //delayMicroseconds(100);
+      delayMicroseconds(300);
 
 
       if (hall_val < SENSE_THRS) {
@@ -346,46 +366,50 @@ void displayConnectWait(void) {
   delay(300);
 }
 
-
-void displayBtoPlay(void) {
-  byte led_array[8] = {0};
-
-  led_array[0] = 0x01;
-  led_array[1] = 0x01;
-  led_array[2] = 0x01;
-  led_array[3] = 0x01;
-  led_array[4] = 0x01;
-  led_array[5] = 0x01;
-  led_array[6] = 0x01;
-  led_array[7] = 0x01;
-
-
+void displayFrame(byte frame[8]) {
   digitalWrite(LED_OE_N_PIN , 1);
   digitalWrite(LED_MR_N_PIN, 0);
   digitalWrite(LED_MR_N_PIN, 1);
   digitalWrite(LED_LATCH_PIN, 0);
-  shiftOut(led_array);
+  shiftOut(frame);
   digitalWrite(LED_LATCH_PIN, 1);
   digitalWrite(LED_OE_N_PIN , 0);
+  delay(100);
+  }
+
+void displayNewGame(void) {
+  byte step1[8] = {0b00000000, 
+                   0b00000000, 
+                   0b00000000, 
+                   0b00011000, 
+                   0b00011000, 
+                   0b00000000, 
+                   0b00000000, 
+                   0b00000000};
+
+  byte step2[8] = {0b00000000, 
+                   0b00000000, 
+                   0b00111100, 
+                   0b00100100, 
+                   0b00100100, 
+                   0b00111100, 
+                   0b00000000, 
+                   0b00000000};
+
+
+                   
+  displayFrame(step1);
+  delay(10);
+  displayFrame(step2);
+  delay(10);
+  displayFrame(step1);
+  delay(10);
+  displayFrame(step2);
+  delay(10);
+  displayFrame(step1);
+  delay(10);
+  displayFrame(step2);
+  delay(10);
+  clearDisplay();
 }
 
-void displayWtoPlay(void) {
-  byte led_array[8] = {0};
-
-  led_array[0] = 0x80;
-  led_array[1] = 0x80;
-  led_array[2] = 0x80;
-  led_array[3] = 0x80;
-  led_array[4] = 0x80;
-  led_array[5] = 0x80;
-  led_array[6] = 0x80;
-  led_array[7] = 0x80;
-
-  digitalWrite(LED_OE_N_PIN , 1);
-  digitalWrite(LED_MR_N_PIN, 0);
-  digitalWrite(LED_MR_N_PIN, 1);
-  digitalWrite(LED_LATCH_PIN, 0);
-  shiftOut(led_array);
-  digitalWrite(LED_LATCH_PIN, 1);
-  digitalWrite(LED_OE_N_PIN , 0);
-}
