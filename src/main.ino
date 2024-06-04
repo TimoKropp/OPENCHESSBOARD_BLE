@@ -7,7 +7,7 @@
 #include "openchessboard.h"
 
 #define DEVICE_NAME "OPEN CHESS" // max name size with 128 bit uuid is 11
-#define DEBUG true  // set to true for debug output, false for no debug output
+#define DEBUG false  // set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
 bool skip_next_send = false;
@@ -48,7 +48,7 @@ public:
 
   void onFen(const BleChessString& fen) override {
     clearDisplay();
-    displayWtoPlay();
+    displayNewGame();
     
     game_running = true;
     DEBUG_SERIAL.print("new game: ");
@@ -65,7 +65,6 @@ public:
       displayMove(mv.c_str());
       skip_next_send = true;
     }
-
     sendAck(true);
   }
 
@@ -98,7 +97,7 @@ public:
       DEBUG_SERIAL.print("move accepted: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
       clearDisplay();
-      displayMove(lastPeripheralMove.c_str());
+      //displayMove(lastPeripheralMove.c_str());
       skip_next_send = false;
       // my_castling_rights = true;
       // opp_castling_rights = true;
