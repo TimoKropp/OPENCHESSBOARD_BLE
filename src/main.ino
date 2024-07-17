@@ -44,20 +44,20 @@ public:
     const bool isSuppported =
       feature == "msg" ||
       feature == "last_move";
-    sendAck(isSuppported);
+    sendPeripheralAck(isSuppported);
   }
 
-  void onFen(const BleChessString& fen) override {
+  void onCentralFen(const BleChessString& fen) override {
     clearDisplay();
     //displayNewGame();
     game_running = true;
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
     
-    sendAck(true);
+    sendPeripheralAck(true);
   }
 
-  void onMove(const BleChessString& mv) override {
+  void onCentralMove(const BleChessString& mv) override {
     clearDisplay();
     if (game_running){
       DEBUG_SERIAL.print("moved from central: ");
@@ -65,10 +65,10 @@ public:
       displayMove(mv.c_str());
       skip_next_send = true;
     }
-    sendAck(true);
+    sendPeripheralAck(true);
   }
 
-  void onMoveAck(bool ack) override {
+  void onPeripheralMoveAck(bool ack) override {
     if (ack){
       clearDisplay();
       onMoveAccepted();
@@ -79,11 +79,11 @@ public:
     }
   }
 
-  void onPromote(const BleChessString& mv) override {
+  void onPeripheralMovePromoted(const BleChessString& mv) override {
     DEBUG_SERIAL.print("promoted on central screen: ");
     DEBUG_SERIAL.println(mv.c_str());
 
-    sendAck(true);
+    sendPeripheralAck(true);
   }
 
   void onLastMove(const BleChessString& mv) override {
@@ -92,7 +92,7 @@ public:
     DEBUG_SERIAL.println(mv.c_str());
     displayMove(mv.c_str());
 
-    sendAck(true);
+    sendPeripheralAck(true);
   }
 
   void onMoveAccepted(){
@@ -134,7 +134,7 @@ public:
       
       clearDisplay();
       if (!skip_next_send){
-        sendMove(move);
+        sendPeripheralMove(move);
         lastPeripheralMove = move;
       }
       skip_next_send = false; /* skip only once, then allow new move send */

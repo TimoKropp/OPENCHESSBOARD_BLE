@@ -4,14 +4,13 @@
 
 /* BOARD SETUP/CONFIGURATION */
 #define SENSE_THRS 300 // Reduce if pieces are not recognized, increase if Board starts blinking randomly
-#define esp32
 bool connect_flipstate = true;
 
 //define if board orientation has power plug at top; if not defined board is oriented with plug at right side
 #define PLUG_AT_TOP 
 
 /* HW GPIO configuration */
-#ifdef esp32
+#ifdef ARDUINO_ARCH_ESP32
 int LED_DATA_PIN = D2; //D2, 5
 int LED_OE_N_PIN = D3; // D3, 6 
 int LED_MR_N_PIN = D4; //D4, 7
@@ -27,9 +26,7 @@ int HALL_ROW_S1 = A6; //D23, 13, A6
 int HALL_ROW_S2 = A5; //D22, 12, A5
 int HALL_SENSE = A3;  //A3
 
-#endif
-
-#ifdef nano33iot
+#elif ARDUINO_ARCH_SAMD
 int LED_MR_N_PIN = 4; // RESET, D4
 int LED_CLOCK_PIN = 6; //SHCP, D5
 int LED_LATCH_PIN = 5; //STCP, D6 
