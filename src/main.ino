@@ -6,7 +6,7 @@
 #include <BleChessMultiservice.h>
 #include "openchessboard.h"
 
-#define DEVICE_NAME "OPEN CHESS" // max name size with 128 bit uuid is 11
+#define DEVICE_NAME "OCB" // max name size with 128 bit uuid is 11
 #define DEBUG false  // set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
@@ -40,6 +40,7 @@ class Peripheral : public BleChessPeripheral
 {
 public:
   void onFeature(const BleChessString& feature) override {
+    clearDisplay();
     const bool isSuppported =
       feature == "msg" ||
       feature == "last_move";
@@ -48,8 +49,7 @@ public:
 
   void onFen(const BleChessString& fen) override {
     clearDisplay();
-    displayNewGame();
-    
+    //displayNewGame();
     game_running = true;
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
@@ -70,9 +70,11 @@ public:
 
   void onMoveAck(bool ack) override {
     if (ack){
+      clearDisplay();
       onMoveAccepted();
     }
     else{
+      clearDisplay();
       onMoveRejected();
     }
   }
@@ -85,6 +87,7 @@ public:
   }
 
   void onLastMove(const BleChessString& mv) override {
+    clearDisplay();
     DEBUG_SERIAL.print("last move: ");
     DEBUG_SERIAL.println(mv.c_str());
     displayMove(mv.c_str());
@@ -94,9 +97,9 @@ public:
 
   void onMoveAccepted(){
     if (game_running){
+            clearDisplay();
       DEBUG_SERIAL.print("move accepted: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
-      clearDisplay();
       //displayMove(lastPeripheralMove.c_str());
       skip_next_send = false;
       // my_castling_rights = true;
@@ -166,6 +169,10 @@ void loop() {
 #ifndef USE_NIM_BLE_ARDUINO_LIB
   BLE.poll();
 #endif
-  ArduinoBleOTA.pull();
+  while(!game_running){
+    ArduinoBleOTA.pull();
+    displayWaitForGame();
+  }
   peripheral.checkPeripheralMove();
+
 }

@@ -378,10 +378,14 @@ void displayFrame(byte frame[8]) {
   }
 
 void displayNewGame(void) {
+  
+}
+
+void displayWaitForGame(void) {
   byte step1[8] = {0b00000000, 
                    0b00000000, 
                    0b00000000, 
-                   0b00011000, 
+                   0b00010000, 
                    0b00011000, 
                    0b00000000, 
                    0b00000000, 
@@ -389,27 +393,39 @@ void displayNewGame(void) {
 
   byte step2[8] = {0b00000000, 
                    0b00000000, 
-                   0b00111100, 
-                   0b00100100, 
-                   0b00100100, 
-                   0b00111100, 
+                   0b00000000, 
+                   0b00011000, 
+                   0b00010000, 
+                   0b00000000, 
                    0b00000000, 
                    0b00000000};
 
+  byte step3[8] = {0b00000000, 
+                   0b00000000, 
+                   0b00000000, 
+                   0b00011000, 
+                   0b00001000, 
+                   0b00000000, 
+                   0b00000000, 
+                   0b00000000};
 
-                   
-  displayFrame(step1);
-  delay(10);
+  byte step4[8] = {0b00000000, 
+                   0b00000000, 
+                   0b00000000, 
+                   0b00001000, 
+                   0b00011000, 
+                   0b00000000, 
+                   0b00000000, 
+                   0b00000000};
+          
+  displayFrame(step4);
+  delay(80);
+  displayFrame(step3);
+  delay(80);
   displayFrame(step2);
-  delay(10);
+  delay(80);
   displayFrame(step1);
-  delay(10);
-  displayFrame(step2);
-  delay(10);
-  displayFrame(step1);
-  delay(10);
-  displayFrame(step2);
-  delay(10);
-  clearDisplay();
+  delay(80);
 }
+
 
