@@ -39,7 +39,7 @@ bool checkCastling(BleChessString move_input) {
 class Peripheral : public BleChessPeripheral
 {
 public:
-  void onFeature(const BleChessString& feature) override {
+  void onCentralFeature(const BleChessString& feature) override {
     clearDisplay();
     const bool isSuppported =
       feature == "msg" ||
@@ -86,7 +86,7 @@ public:
     sendPeripheralAck(true);
   }
 
-  void onLastMove(const BleChessString& mv) override {
+  void onCentralLastMove(const BleChessString& mv) override {
     clearDisplay();
     DEBUG_SERIAL.print("last move: ");
     DEBUG_SERIAL.println(mv.c_str());
