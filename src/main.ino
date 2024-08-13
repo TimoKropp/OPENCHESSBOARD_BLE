@@ -49,7 +49,7 @@ public:
 
   void onCentralFen(const BleChessString& fen) override {
     clearDisplay();
-    //displayNewGame();
+    displayNewGame();
     game_running = true;
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
