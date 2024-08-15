@@ -6,6 +6,8 @@
 #include <BleChessMultiservice.h>
 #include "openchessboard.h"
 
+#define HW_DEBUG   // 
+
 #define DEVICE_NAME "OCB" // max name size with 128 bit uuid is 11
 #define DEBUG false  // set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
@@ -166,6 +168,9 @@ void setup() {
 }
 
 void loop() {
+#ifdef HW_DEBUG
+  hw_test();
+#elif
 #ifndef USE_NIM_BLE_ARDUINO_LIB
   BLE.poll();
 #endif
@@ -174,5 +179,5 @@ void loop() {
     displayWaitForGame();
   }
   peripheral.checkPeripheralMove();
-
+#endif
 }

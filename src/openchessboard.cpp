@@ -3,11 +3,15 @@
 #include <ArduinoBleChess.h>
 
 /* BOARD SETUP/CONFIGURATION */
-#define SENSE_THRS 300 // Reduce if pieces are not recognized, increase if Board starts blinking randomly
+#define SENSE_THRS 500 // Increase if pieces are not recognized, decrease if Board starts blinking randomly
 bool connect_flipstate = true;
 
 //define if board orientation has power plug at top; if not defined board is oriented with plug at right side
 #define PLUG_AT_TOP 
+#define HW_DEBUG   // 
+
+#define DEBUG false  // set to true for debug output, false for no debug output
+#define DEBUG_SERIAL if(DEBUG)Serial
 
 /* HW GPIO configuration */
 #ifdef ARDUINO_ARCH_ESP32
@@ -132,7 +136,7 @@ void readHall(byte hallBoardState[]) {
     digitalWrite(HALL_ROW_S0, bit0);
     digitalWrite(HALL_ROW_S1, bit1);
     digitalWrite(HALL_ROW_S2, bit2);
-
+    delayMicroseconds(500);
     for (int col_index = 0; col_index < 8; col_index++) {
         bool bit0 = ((byte)col_index & (1 << 0)) != 0;
         bool bit1 = ((byte)col_index & (1 << 1)) != 0;
@@ -452,5 +456,45 @@ void displayWaitForGame(void) {
   delay(80);
   clearDisplay();
 }
+
+byte swapBits(byte b) {
+    byte swapped = 0;
+    for (int i = 0; i < 8; i++) {
+        swapped |= ((b >> i) & 0x01) << (7 - i);
+    }
+    return swapped;
+}
+
+void hw_test(void){
+    byte hallBoardStateInit[8];
+  for (int k = 0; k < 8; k++) {
+    hallBoardStateInit[k] = 0x00;
+  }
+  readHall(hallBoardStateInit);
+    
+  // Rotate the matrix 180 degrees in place
+  for (int i = 0; i < 4; i++) {
+      // Swap each byte with its counterpart on the opposite side
+      byte temp = hallBoardStateInit[i];
+      hallBoardStateInit[i] = swapBits(hallBoardStateInit[7 - i]);
+      hallBoardStateInit[7 - i] = swapBits(temp);
+  }
+  
+  for (int i = 0; i < 8; i++) {
+      for (int j = 7; j >= 0; j--) {
+          // Extract each bit from the byte and print it
+
+          DEBUG_SERIAL.print((hallBoardStateInit[i] >> j) & 0x01);
+          DEBUG_SERIAL.print(" ");
+      }
+      DEBUG_SERIAL.println();  // Move to the next line after each byte
+  }
+  DEBUG_SERIAL.println(); 
+
+
+  displayFrame(hallBoardStateInit);
+
+}
+
 
 
