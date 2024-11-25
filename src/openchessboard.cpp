@@ -297,13 +297,10 @@ inline String getPiecesPlacement(const byte hallBoardState[8]) {
 }
 
 String getFen(void) {
-  String fen;
-
   byte hallBoardState[8];
   for (int k = 0; k < 8; k++) {
     hallBoardState[k] = 0x00;
   }
-
   readHall(hallBoardState);
 
   return getPiecesPlacement(hallBoardState);
@@ -320,8 +317,7 @@ bool areFensSame(const String& peripheralFen, const String& centralFen) {
       if (piecesNames.indexOf(centralFen[i]) == -1) {
         return false;
       }
-    }
-    else if (peripheralFen[i] != centralFen[i]) {
+    } else if (peripheralFen[i] != centralFen[i]) {
       return false;
     }
   }
