@@ -156,7 +156,6 @@ void readHall(byte hallBoardState[]) {
     }
 
     }
-
 }
 
 
@@ -266,9 +265,68 @@ String getMoveInput(void) {
   delay(300);
   
   return mvInput;
-  
 }
 
+inline String getRow(const byte hallBoardState[8], int row) {
+  String gen{};
+  int count = 0;
+  for (int col = 0; col < 8; col++) {
+    int state = bitRead(hallBoardState[row], col);
+    if (state) {
+      if (count > 0) gen += String(count);
+      gen += '?';
+      count = 0;
+    }
+    else {
+      count++;
+    }
+  }
+  if (count > 0) gen += String(count);
+  return gen;
+}
+
+inline String getPiecesPlacement(const byte hallBoardState[8]) {
+  String piecesPlacement{};
+
+  for (int row = 8 - 1; row > 0; row--) {
+    piecesPlacement += getRow(hallBoardState, row);
+    piecesPlacement += '/';
+  }
+  piecesPlacement += getRow(hallBoardState, 0);
+  return piecesPlacement;
+}
+
+String getFen(void) {
+  String fen;
+
+  byte hallBoardState[8];
+  for (int k = 0; k < 8; k++) {
+    hallBoardState[k] = 0x00;
+  }
+
+  readHall(hallBoardState);
+
+  return getPiecesPlacement(hallBoardState);
+}
+
+bool areFensSame(const String& peripheralFen, const String& centralFen) {
+  static const String piecesNames = "prbnkqPRBNKQ";
+  if (peripheralFen.length() > centralFen.length()) {
+    return false;
+  }
+  for (int i = 0; i < peripheralFen.length(); i++)
+  {
+    if (peripheralFen[i] == '?') {
+      if (piecesNames.indexOf(centralFen[i]) == -1) {
+        return false;
+      }
+    }
+    else if (peripheralFen[i] != centralFen[i]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /* ---------------------------------------
  *  Function that clears all LED states.
@@ -406,7 +464,6 @@ void displayNewGame(void) {
   displayFrame(step2);
   delay(80);
   clearDisplay();
-
 }
 
 void displayWaitForGame(void) {
@@ -493,7 +550,6 @@ void hw_test(void){
 
 
   displayFrame(hallBoardStateInit);
-
 }
 
 

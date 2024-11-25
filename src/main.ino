@@ -56,7 +56,16 @@ public:
     DEBUG_SERIAL.print("new game: ");
     DEBUG_SERIAL.println(fen.c_str());
     
+    String peripheralFen = getFen();
+    if (!areFensSame(peripheralFen, fen.c_str()))
+    {
+      sendPeripheralAck(false);
+      sendPeripheralFen(peripheralFen.c_str());
+    }
     sendPeripheralAck(true);
+  }
+
+  void onPeripheralFenAck(bool ack) override {
   }
 
   void onCentralMove(const BleChessString& mv) override {
@@ -97,9 +106,9 @@ public:
     sendPeripheralAck(true);
   }
 
-  void onMoveAccepted(){
-    if (game_running){
-            clearDisplay();
+  void onMoveAccepted() {
+    if (game_running) {
+      clearDisplay();
       DEBUG_SERIAL.print("move accepted: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
       //displayMove(lastPeripheralMove.c_str());
@@ -110,7 +119,7 @@ public:
   }
 
   void onMoveRejected() {
-    if (game_running){
+    if (game_running) {
       DEBUG_SERIAL.print("move rejected: ");
       DEBUG_SERIAL.println(lastPeripheralMove.c_str());
       for (int k = 0; k < 3; k++){
@@ -124,7 +133,6 @@ public:
   }
   
   void checkPeripheralMove() {
-
       BleChessString move = getMoveInput().c_str();
 
       if(checkCastling(move)){
