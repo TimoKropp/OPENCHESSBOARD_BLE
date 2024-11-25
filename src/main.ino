@@ -57,8 +57,9 @@ public:
     DEBUG_SERIAL.println(fen.c_str());
     
     String peripheralFen = getFen();
-    if (!areFensSame(peripheralFen, fen.c_str()))
-    {
+    centralFen = fen;
+    isSynchronized = areFensSame(peripheralFen, centralFen.c_str());
+    if (!isSynchronized) {
       sendPeripheralAck(false);
       sendPeripheralFen(peripheralFen.c_str());
     }
@@ -133,25 +134,37 @@ public:
   }
   
   void checkPeripheralMove() {
-      BleChessString move = getMoveInput().c_str();
-
-      if(checkCastling(move)){
-        getMoveInput(); /* get second move from castling but do not send it: send king move only after second input */
+    if (!isSynchronized) {
+      String peripheralFen = getFen();
+      isSynchronized = areFensSame(peripheralFen, centralFen.c_str());
+      sendPeripheralFen(peripheralFen.c_str());
+      if (!isSynchronized) {
+        delay(500);
+        return;
       }
+    }
 
-      DEBUG_SERIAL.print("moved from peripheral: ");
-      DEBUG_SERIAL.println(move.c_str());
-      
-      clearDisplay();
-      if (!skip_next_send){
-        sendPeripheralMove(move);
-        lastPeripheralMove = move;
-      }
-      skip_next_send = false; /* skip only once, then allow new move send */
+    BleChessString move = getMoveInput().c_str();
+
+    if(checkCastling(move)){
+      getMoveInput(); /* get second move from castling but do not send it: send king move only after second input */
+    }
+
+    DEBUG_SERIAL.print("moved from peripheral: ");
+    DEBUG_SERIAL.println(move.c_str());
+    
+    clearDisplay();
+    if (!skip_next_send){
+      sendPeripheralMove(move);
+      lastPeripheralMove = move;
+    }
+    skip_next_send = false; /* skip only once, then allow new move send */
   }
 
 private:
   BleChessString lastPeripheralMove;
+  BleChessString centralFen;
+  bool isSynchronized = true;
 };
 Peripheral peripheral{};
 
