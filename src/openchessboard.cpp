@@ -298,11 +298,7 @@ inline String getPiecesPlacement(const byte hallBoardState[]) {
 
 String getFen(void) {
   byte hallBoardState[8];
-  for (int k = 0; k < 8; k++) {
-    hallBoardState[k] = 0x00;
-  }
   readHall(hallBoardState);
-
   return getPiecesPlacement(hallBoardState);
 }
 
