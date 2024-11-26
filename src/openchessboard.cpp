@@ -268,21 +268,21 @@ String getMoveInput(void) {
 }
 
 inline String getRow(const byte hallBoardState[], int row_index) {
-  String gen{};
+  String row{};
   int count = 0;
   for (int col_index = 0; col_index < 8; col_index++) {
     int state = bitRead(hallBoardState[row_index], col_index);
     if (state) {
-      if (count > 0) gen += String(count);
-      gen += '?';
+      if (count > 0) row += String(count);
+      row += '?';
       count = 0;
     }
     else {
       count++;
     }
   }
-  if (count > 0) gen += String(count);
-  return gen;
+  if (count > 0) row += String(count);
+  return row;
 }
 
 inline String getPiecesPlacement(const byte hallBoardState[]) {
