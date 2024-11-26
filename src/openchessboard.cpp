@@ -166,7 +166,7 @@ void readHall(byte hallBoardState[]) {
  *  Example move: e2e4(piece moves from e2 to e4)
  *  @params[in] void
  *  @return String mvInput
-*/  
+*/
 String getMoveInput(void) {
   const char columns[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
@@ -267,11 +267,11 @@ String getMoveInput(void) {
   return mvInput;
 }
 
-inline String getRow(const byte hallBoardState[8], int row) {
+inline String getRow(const byte hallBoardState[], int row_index) {
   String gen{};
   int count = 0;
-  for (int col = 0; col < 8; col++) {
-    int state = bitRead(hallBoardState[row], col);
+  for (int col_index = 0; col_index < 8; col_index++) {
+    int state = bitRead(hallBoardState[row_index], col_index);
     if (state) {
       if (count > 0) gen += String(count);
       gen += '?';
@@ -285,11 +285,11 @@ inline String getRow(const byte hallBoardState[8], int row) {
   return gen;
 }
 
-inline String getPiecesPlacement(const byte hallBoardState[8]) {
+inline String getPiecesPlacement(const byte hallBoardState[]) {
   String piecesPlacement{};
 
-  for (int row = 8 - 1; row > 0; row--) {
-    piecesPlacement += getRow(hallBoardState, row);
+  for (int row_index = 7; row_index > 0; row_index--) {
+    piecesPlacement += getRow(hallBoardState, row_index);
     piecesPlacement += '/';
   }
   piecesPlacement += getRow(hallBoardState, 0);
@@ -326,7 +326,7 @@ bool areFensSame(const String& peripheralFen, const String& centralFen) {
 
 /* ---------------------------------------
  *  Function that clears all LED states.
- * Writes 0 to shift registers for all LEDs.
+ *  Writes 0 to shift registers for all LEDs.
  *  @params[in] void
  *  @return void
 */  
