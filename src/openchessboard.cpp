@@ -156,7 +156,6 @@ void readHall(byte hallBoardState[]) {
     }
 
     }
-
 }
 
 
@@ -167,7 +166,7 @@ void readHall(byte hallBoardState[]) {
  *  Example move: e2e4(piece moves from e2 to e4)
  *  @params[in] void
  *  @return String mvInput
-*/  
+*/
 String getMoveInput(void) {
   const char columns[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
@@ -266,13 +265,64 @@ String getMoveInput(void) {
   delay(300);
   
   return mvInput;
-  
 }
 
+inline String getRow(const byte hallBoardState[], int row_index) {
+  String row{};
+  int count = 0;
+  for (int col_index = 0; col_index < 8; col_index++) {
+    int state = bitRead(hallBoardState[row_index], col_index);
+    if (state) {
+      if (count > 0) row += String(count);
+      row += '?';
+      count = 0;
+    }
+    else {
+      count++;
+    }
+  }
+  if (count > 0) row += String(count);
+  return row;
+}
+
+inline String getPiecesPlacement(const byte hallBoardState[]) {
+  String piecesPlacement{};
+
+  for (int row_index = 7; row_index > 0; row_index--) {
+    piecesPlacement += getRow(hallBoardState, row_index);
+    piecesPlacement += '/';
+  }
+  piecesPlacement += getRow(hallBoardState, 0);
+  return piecesPlacement;
+}
+
+String getFen(void) {
+  byte hallBoardState[8];
+  readHall(hallBoardState);
+  return getPiecesPlacement(hallBoardState);
+}
+
+bool areFensSame(const String& peripheralFen, const String& centralFen) {
+  static const String piecesNames = "prbnkqPRBNKQ";
+  if (peripheralFen.length() > centralFen.length()) {
+    return false;
+  }
+  for (int i = 0; i < peripheralFen.length(); i++)
+  {
+    if (peripheralFen[i] == '?') {
+      if (piecesNames.indexOf(centralFen[i]) == -1) {
+        return false;
+      }
+    } else if (peripheralFen[i] != centralFen[i]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 /* ---------------------------------------
  *  Function that clears all LED states.
- * Writes 0 to shift registers for all LEDs.
+ *  Writes 0 to shift registers for all LEDs.
  *  @params[in] void
  *  @return void
 */  
@@ -406,7 +456,6 @@ void displayNewGame(void) {
   displayFrame(step2);
   delay(80);
   clearDisplay();
-
 }
 
 void displayWaitForGame(void) {
@@ -493,7 +542,6 @@ void hw_test(void){
 
 
   displayFrame(hallBoardStateInit);
-
 }
 
 
