@@ -1,9 +1,8 @@
 #include <Arduino.h>
 #include "openchessboard.h"
-#include <ArduinoBleChess.h>
 
 /* BOARD SETUP/CONFIGURATION */
-#define SENSE_THRS 500 // Increase if pieces are not recognized, decrease if Board starts blinking randomly
+#define SENSE_THRS 100 // Increase if pieces are not recognized, decrease if Board starts blinking randomly
 bool connect_flipstate = true;
 
 //define if board orientation has power plug at top; if not defined board is oriented with plug at right side
@@ -17,7 +16,7 @@ bool connect_flipstate = true;
 #ifdef ARDUINO_ARCH_ESP32
 int LED_DATA_PIN = D2; //D2, 5
 int LED_OE_N_PIN = D3; // D3, 6 
-int LED_MR_N_PIN = D4; //D4, 7
+int LED_MR_N_PIN = D4; //D4, 
 int LED_LATCH_PIN = D5; // D5, 8
 int LED_CLOCK_PIN = D6; //D6, 9
 
@@ -196,9 +195,7 @@ String getMoveInput(void) {
 
 // wait for Start move event
   while (!mvStarted) {
-#ifndef USE_NIM_BLE_ARDUINO_LIB
-    BLE.poll();
-#endif
+
     readHall(hallBoardState1);
 
     for (int row_index = 0; row_index < 8; row_index++) {
@@ -228,9 +225,7 @@ String getMoveInput(void) {
 
 // wait for end move event
   while (!mvFinished ) {
-#ifndef USE_NIM_BLE_ARDUINO_LIB
-    BLE.poll();
-#endif
+
     readHall(hallBoardState2);
     delay(100);
     readHall(hallBoardState3);
@@ -342,6 +337,7 @@ void displayMove(String mv) {
   digitalWrite(LED_LATCH_PIN, 1);
   digitalWrite(LED_OE_N_PIN , 0);
 
+
 }
 
 
@@ -372,9 +368,11 @@ void displayFrame(byte frame[8]) {
   digitalWrite(LED_MR_N_PIN, 0);
   digitalWrite(LED_MR_N_PIN, 1);
   digitalWrite(LED_LATCH_PIN, 0);
+
   shiftOut(frame);
   digitalWrite(LED_LATCH_PIN, 1);
-  digitalWrite(LED_OE_N_PIN , 0);
+    //digitalWrite(LED_OE_N_PIN , 0);
+  analogWrite(LED_OE_N_PIN , 150);
   delay(100);
   }
 
@@ -471,15 +469,14 @@ void hw_test(void){
     hallBoardStateInit[k] = 0x00;
   }
   readHall(hallBoardStateInit);
-    
-  // Rotate the matrix 180 degrees in place
+  
   for (int i = 0; i < 4; i++) {
       // Swap each byte with its counterpart on the opposite side
       byte temp = hallBoardStateInit[i];
       hallBoardStateInit[i] = swapBits(hallBoardStateInit[7 - i]);
       hallBoardStateInit[7 - i] = swapBits(temp);
   }
-  
+
   for (int i = 0; i < 8; i++) {
       for (int j = 7; j >= 0; j--) {
           // Extract each bit from the byte and print it
@@ -496,5 +493,268 @@ void hw_test(void){
 
 }
 
+void highlightAttackedSquares(byte hallBoardState[], byte frame[]) {
+  // Initialize the frame with no attacked squares
+  for (int i = 0; i < 8; i++) {
+    frame[i] = 0x00;  // Clear all positions in the frame
+  }
+
+  // Loop through the hallBoardState to find the queens' positions
+  for (int row = 0; row < 8; row++) {
+    for (int col = 0; col < 8; col++) {
+      if (hallBoardState[row] & (1 << col)) {  // Check if there's a queen in this position
+        // Mark all squares in the same row
+        frame[row] = 0xFF;  // All squares in the row are attacked
+
+        // Mark all squares in the same column
+        for (int r = 0; r < 8; r++) {
+          frame[r] |= (1 << col);  // Set the bit for this column in all rows
+        }
+
+        // Mark diagonals
+        // Main diagonal (top-left to bottom-right)
+        for (int i = 1; i < 8; i++) {
+          if (row + i < 8 && col + i < 8) {
+            frame[row + i] |= (1 << (col + i));  // Bottom-right diagonal
+          }
+          if (row - i >= 0 && col - i >= 0) {
+            frame[row - i] |= (1 << (col - i));  // Top-left diagonal
+          }
+        }
+
+        // Anti-diagonal (top-right to bottom-left)
+        for (int i = 1; i < 8; i++) {
+          if (row + i < 8 && col - i >= 0) {
+            frame[row + i] |= (1 << (col - i));  // Bottom-left diagonal
+          }
+          if (row - i >= 0 && col + i < 8) {
+            frame[row - i] |= (1 << (col + i));  // Top-right diagonal
+          }
+        }
+      }
+    }
+  }
+  for (int i = 0; i < 4; i++) {
+    // Swap each byte with its counterpart on the opposite side
+    byte temp = frame[i];
+    frame[i] = swapBits(frame[7 - i]);
+    frame[7 - i] = swapBits(temp);
+  }
+}
+
+bool isFrameEmpty(byte frame[]) {
+  for (int i = 0; i < 8; i++) {
+    if (frame[i] != 0) {
+      return false;  // Frame is not empty
+    }
+  }
+  return true;  // Frame is empty
+}
+
+bool isFrameFull(byte frame[]) {
+  for (int i = 0; i < 8; i++) {
+    if (frame[i] != 0xFF) {
+      return false;  // Frame is not fully occupied
+    }
+  }
+  return true;  // Frame is fully occupied
+}
+
+// Function to highlight the connection between two pieces
+void highlightConnection(byte frame[], int startRow, int startCol, int endRow, int endCol) {
+    int rowStep = (endRow > startRow) ? 1 : (endRow < startRow) ? -1 : 0;
+    int colStep = (endCol > startCol) ? 1 : (endCol < startCol) ? -1 : 0;
+
+    int row = startRow;
+    int col = startCol;
+
+    // Highlight the squares along the path
+    while (row != endRow || col != endCol) {
+        frame[row] |= (1 << col);  // Highlight the current square
+
+        // Move towards the target position
+        if (row != endRow) row += rowStep;
+        if (col != endCol) col += colStep;
+    }
+
+    // Highlight the end square (the piece being attacked)
+    frame[endRow] |= (1 << endCol);
+}
+
+void highlightAttackedPieces(byte hallBoardState[], byte frame[]) {
+    // Initialize the frame with no highlighted pieces
+    for (int i = 0; i < 8; i++) {
+        frame[i] = 0x00;  // Clear all positions in the frame
+    }
+
+    // Find all queens' positions
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            if (hallBoardState[row] & (1 << col)) {  // There's a queen at (row, col)
+
+                // Check for other queens in the same row
+                for (int c = 0; c < 8; c++) {
+                    if (c != col && (hallBoardState[row] & (1 << c))) {  // Another queen in the same row
+                        highlightConnection(frame, row, col, row, c);
+                    }
+                }
+
+                // Check for other queens in the same column
+                for (int r = 0; r < 8; r++) {
+                    if (r != row && (hallBoardState[r] & (1 << col))) {  // Another queen in the same column
+                        highlightConnection(frame, row, col, r, col);
+                    }
+                }
+
+                // Check for other queens in diagonals (main diagonal and anti-diagonal)
+                for (int i = 1; i < 8; i++) {
+                    // Main diagonal (top-left to bottom-right)
+                    if (row + i < 8 && col + i < 8 && (hallBoardState[row + i] & (1 << (col + i)))) {
+                        highlightConnection(frame, row, col, row + i, col + i);
+                    }
+                    if (row - i >= 0 && col - i >= 0 && (hallBoardState[row - i] & (1 << (col - i)))) {
+                        highlightConnection(frame, row, col, row - i, col - i);
+                    }
+
+                    // Anti-diagonal (top-right to bottom-left)
+                    if (row + i < 8 && col - i >= 0 && (hallBoardState[row + i] & (1 << (col - i)))) {
+                        highlightConnection(frame, row, col, row + i, col - i);
+                    }
+                    if (row - i >= 0 && col + i < 8 && (hallBoardState[row - i] & (1 << (col + i)))) {
+                        highlightConnection(frame, row, col, row - i, col + i);
+                    }
+                }
+            }
+        }
+    }
+
+    // Optional: Rotate frame if needed
+    for (int i = 0; i < 4; i++) {
+        // Swap each byte with its counterpart on the opposite side
+        byte temp = frame[i];
+        frame[i] = swapBits(frame[7 - i]);
+        frame[7 - i] = swapBits(temp);
+    }
+}
 
 
+void winningTreeAnimation(byte hallBoardState[], byte frame[]) {
+
+  
+  for (int i = 0; i < 4; i++) {
+      // Swap each byte with its counterpart on the opposite side
+      byte temp = hallBoardState[i];
+      hallBoardState[i] = swapBits(hallBoardState[7 - i]);
+      hallBoardState[7 - i] = swapBits(temp);
+  }
+
+  // Step 1: Find all placed pieces
+  struct Position {
+    int row;
+    int col;
+  };
+
+  Position pieces[8];  // Assuming at most 8 pieces on the board
+  int pieceCount = 0;
+
+  // Find the positions of all the pieces on the board
+  for (int row = 0; row < 8; row++) {
+    for (int col = 0; col < 8; col++) {
+      if (hallBoardState[row] & (1 << col)) {  // There's a piece at (row, col)
+        pieces[pieceCount++] = {row, col};     // Store its position
+      }
+    }
+  }
+
+  // Step 2: Start from the first piece as the root
+  if (pieceCount == 0) return;  // No pieces to connect
+
+  Position root = pieces[0];  // Root of the tree (start point)
+  for (int k = 0; k < 8; k++) {
+    frame[k] = 0x00;  // Clear the frame
+  }
+  // Step 3: Create connections to all other pieces
+  for (int i = 1; i < pieceCount; i++) {
+    Position current = pieces[i];  // Current piece to connect to the root
+    Position start = root;
+       // Clear the frame before drawing a new path
+
+    // Draw the path step by step without clearing the frame
+    int rowStep = (start.row < current.row) ? 1 : (start.row > current.row) ? -1 : 0;
+    int colStep = (start.col < current.col) ? 1 : (start.col > current.col) ? -1 : 0;
+
+    int row = start.row;
+    int col = start.col;
+
+    // Step through each square between start and current
+    while (row != current.row || col != current.col) {
+      frame[row] |= (1 << col);  // Highlight the current square
+      displayFrame(frame);       // Display the updated frame
+      delay(5);                // Adjust delay for better visibility
+
+      // Move towards the target position
+      if (row != current.row) row += rowStep;
+      if (col != current.col) col += colStep;
+    }
+
+    // Highlight the current position (final step of the path)
+    frame[current.row] |= (1 << current.col);
+    displayFrame(frame);
+    delay(50);  // Delay after reaching each piece
+
+    // Set the root to the current piece for the next connection (tree-like structure)
+    root = current;
+  }
+}
+void flickeringAnimation(byte frame[]) {
+    // Number of flickers to display
+    const int flickerCount = 10; // Change this to increase or decrease flicker speed
+    const int delayTime = 1; // Delay between flickers in milliseconds
+
+    for (int i = 0; i < flickerCount; i++) {
+        // Generate a random pattern for the frame
+        for (int k = 0; k < 8; k++) {
+            frame[k] = random(0x00, 0xFF); // Random byte (0-255) for each row
+        }
+
+        displayFrame(frame); // Display the random pattern
+        delay(delayTime);    // Delay to create flickering effect
+    }
+
+    // Clear the frame after flickering
+    for (int k = 0; k < 8; k++) {
+        frame[k] = 0x00; // Clear the frame
+    }
+
+    displayFrame(frame); // Display the cleared frame
+}
+void puzzle_test(void) {
+    static bool flickeringShown = false; // Static variable to track if flickering has been shown
+    byte hallBoardState[8];  // To store the state of the hall sensor board
+    byte frame[8];  // To store the display frame
+
+    // Read the hall sensor board state
+    readHall(hallBoardState);
+
+    // First, try to highlight only the pieces that are attacking or being attacked
+    highlightAttackedPieces(hallBoardState, frame);
+
+    // Check if the frame is empty (no attacking pieces found)
+    if (isFrameEmpty(frame)) {
+        // If no pieces are attacking each other, highlight all attacked squares
+        highlightAttackedSquares(hallBoardState, frame);
+    }
+
+    // Check if the frame is full
+    if (isFrameFull(frame)) {
+        if (!flickeringShown) { // Only show flickering if it hasn't been shown yet
+            flickeringAnimation(frame);
+            flickeringShown = true; // Mark that flickering has been shown
+        }
+    } else {
+        flickeringShown = false; // Reset the flickeringShown flag if frame is not full
+    }
+
+    // Display the frame (either attacked pieces or all attacked squares)
+    displayFrame(frame);
+}
