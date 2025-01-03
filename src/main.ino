@@ -53,17 +53,16 @@ public:
     clearDisplay();
     displayNewGame();
     game_running = true;
-    DEBUG_SERIAL.print("new game: ");
+    DEBUG_SERIAL.print("new state: ");
     DEBUG_SERIAL.println(fen.c_str());
     
     String peripheralFen = getFen();
     centralFen = fen;
     isSynchronized = areFensSame(peripheralFen, centralFen.c_str());
+    sendPeripheralAck(isSynchronized);
     if (!isSynchronized) {
-      sendPeripheralAck(false);
       sendPeripheralFen(peripheralFen.c_str());
     }
-    sendPeripheralAck(true);
   }
 
   void onPeripheralFenAck(bool ack) override {
