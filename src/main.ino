@@ -6,10 +6,10 @@
 #include <BleChessMultiservice.h>
 #include "openchessboard.h"
 
-//#define HW_DEBUG   // 
+#define HW_DEBUG   // 
 
 #define DEVICE_NAME "OCB" // max name size with 128 bit uuid is 11
-#define DEBUG true  // set to true for debug output, false for no debug output
+#define DEBUG false  // set to true for debug output, false for no debug output
 #define DEBUG_SERIAL if(DEBUG)Serial
 
 bool skip_next_send = false;
@@ -170,11 +170,11 @@ Peripheral peripheral{};
 
 void setup() {
   initHW();
-
   DEBUG_SERIAL.begin(115200);
 #if DEBUG
   while(!Serial);
 #endif
+#ifndef HW_DEBUG
   DEBUG_SERIAL.println("BLE init: OPENCHESSBOARD");
   initBle(DEVICE_NAME);
   if (!ArduinoBleChess.begin(peripheral)){
@@ -185,8 +185,8 @@ void setup() {
   }
   advertiseBle(DEVICE_NAME, BLE_CHESS_SERVICE_UUID, BLE_OTA_SERVICE_UUID);
   DEBUG_SERIAL.println("start BLE polling...");
+#endif
 }
-
 void loop() {
 #ifdef HW_DEBUG
   hw_test();
